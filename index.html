@@ -14,14 +14,14 @@
     rel="stylesheet">
   <style>
     :root {
-      --paper: #e9e2d0eb;
-      --paper-panel: #f2ecdd;
+      --paper: #f5e5d1;
+      --paper-panel: #ffffffde;
       --ink: #262019;
       --walnut: #4a3527;
       --walnut-dk: #35251a;
-      --rust: #bf5b30;
-      --teal: #2c6659;
-      --mustard: #c8952f;
+      --rust: #994636;
+      --teal: #6b9080;
+      --mustard: #748067;
       --cream-line: rgba(38, 32, 25, 0.14);
       --shadow: 0 10px 30px rgba(38, 32, 25, 0.16);
       --radius: 6px;
@@ -107,9 +107,10 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      background: #e9e2d0eb;
+      background: #000000eb;
       backdrop-filter: blur(6px);
       border-bottom: 1px solid var(--cream-line);
+      color: #ffffffde;
     }
 
     .nav-inner {
@@ -140,7 +141,7 @@
       font-size: 0.74rem;
       letter-spacing: 0.08em;
       text-decoration: none;
-      color: var(--ink);
+      color: #262019;
       display: flex;
       gap: 6px;
       align-items: baseline;
@@ -150,7 +151,7 @@
     }
 
     .nav-links a:hover {
-      color: var(--rust);
+      color: var(--paper-panel);
       border-color: var(--rust);
     }
 
@@ -176,6 +177,7 @@
       grid-template-columns: 1.1fr 0.9fr;
       gap: 40px;
       align-items: center;
+      font-weight: 900;
     }
 
     @media (max-width:860px) {
@@ -187,12 +189,14 @@
 
     .hero-title {
       font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+      font-weight: 900;
       line-height: 0.98;
       letter-spacing: -0.01em;
     }
 
     .hero-title em {
       font-style: italic;
+      font-weight: 900;
       color: var(--rust);
     }
 
@@ -741,7 +745,7 @@
 
     /* ---------- CONTACT / FOOTER ---------- */
     footer {
-      background: var(--walnut-dk);
+      background: #000000eb;
       color: var(--paper);
       padding: 60px 0 30px;
     }
@@ -1077,7 +1081,7 @@
     <!-- ================= RANGO / CANALES ================= -->
     <section id="range" class="wrap">
       <div class="section-head">
-        <span class="tag">BANCO DE ENTRADAS</span>
+        <span class="tag">FADER BANK</span>
         <h2>Rango</h2>
       </div>
       <div class="channels" id="channelBank">
