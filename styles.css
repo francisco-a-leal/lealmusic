@@ -113,6 +113,13 @@
         font-size: 1.15rem;
     }
 
+    strong {
+        font-family: 'Fraunces';
+        font-style: italic;
+        font-weight: 900;
+        font-size: 1.15rem;
+    }
+
     .nav-links {
         display: flex;
         gap: 26px;
@@ -159,7 +166,7 @@
     .hero {
         padding: 76px 0 60px;
         display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
+        /* grid-template-columns: 1.6fr 0.9fr; */
         gap: 40px;
         align-items: center;
         font-weight: 900;
