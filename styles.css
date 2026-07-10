@@ -548,7 +548,7 @@
         margin-top: 26px;
         display: flex;
         gap: 16px;
-        flex-wrap: wrap;
+        flex-wrap:initial;
         font-family: 'Space Mono', monospace;
         font-size: 0.78rem;
         color: var(--walnut);
