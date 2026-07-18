@@ -14,34 +14,6 @@
     rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/x-icon" href="favicon.png">
-  <style>
-    /* Hero background canvas: full-bleed layer that ignores the .wrap max-width,
-       so it can reach the actual right edge of the screen instead of stopping
-       at the edge of the centered content column. */
-    .hero {
-      position: relative;
-      overflow: hidden;
-      /* .hero is no longer itself a .wrap — it spans the full viewport width */
-      padding: 0;
-    }
-
-    .hero-canvas {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 55%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .hero-inner {
-      position: relative;
-      z-index: 1;
-      padding-top: 100px;
-      padding-bottom: 100px;
-    }
-  </style>
 </head>
 
 <body>
@@ -61,9 +33,8 @@
 
   <main>
     <!-- ================= HERO ================= -->
-    <section class="hero">
-      <canvas class="hero-canvas" id="heroCanvas"></canvas>
-      <div class="wrap hero-inner">
+    <section class="hero wrap">
+      <div>
         <p class="eyebrow">Productor — Compositor — Ingeniero de Audio</p>
         <h1 class="hero-title">Francisco<br><em>Leal</em></h1>
         <p class="hero-role">Música original, covers, backing tracks, sonido en vivo</p>
@@ -398,172 +369,6 @@
     } else {
       channels.forEach(function (ch) { ch.classList.add('in-view'); });
     }
-  </script>
-
-  <!-- ================= FONDO ANIMADO DEL HERO ================= -->
-  <script>
-  (function () {
-    // ---------------------------------------------------------------
-    // Ruido Simplex 2D minimalista (implementación estilo dominio público)
-    // ---------------------------------------------------------------
-    function SimplexNoise(seed) {
-      this.p = new Uint8Array(256);
-      this.perm = new Uint8Array(512);
-      this.permMod12 = new Uint8Array(512);
-
-      let s = seed || Math.floor(Math.random() * 65536);
-      function rand() {
-        s |= 0; s = (s + 0x6D2B79F5) | 0;
-        let t = Math.imul(s ^ (s >>> 15), 1 | s);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      }
-
-      for (let i = 0; i < 256; i++) this.p[i] = i;
-      for (let i = 255; i > 0; i--) {
-        const n = Math.floor(rand() * (i + 1));
-        const tmp = this.p[i]; this.p[i] = this.p[n]; this.p[n] = tmp;
-      }
-      for (let i = 0; i < 512; i++) {
-        this.perm[i] = this.p[i & 255];
-        this.permMod12[i] = this.perm[i] % 12;
-      }
-    }
-
-    SimplexNoise.grad3 = [
-      [1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
-      [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
-      [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]
-    ];
-
-    SimplexNoise.prototype.noise2D = function (xin, yin) {
-      const grad3 = SimplexNoise.grad3;
-      const permMod12 = this.permMod12;
-      const perm = this.perm;
-      const F2 = 0.5 * (Math.sqrt(3) - 1);
-      const G2 = (3 - Math.sqrt(3)) / 6;
-
-      let n0, n1, n2;
-      const s = (xin + yin) * F2;
-      const i = Math.floor(xin + s);
-      const j = Math.floor(yin + s);
-      const t = (i + j) * G2;
-      const X0 = i - t, Y0 = j - t;
-      const x0 = xin - X0, y0 = yin - Y0;
-
-      let i1, j1;
-      if (x0 > y0) { i1 = 1; j1 = 0; } else { i1 = 0; j1 = 1; }
-
-      const x1 = x0 - i1 + G2, y1 = y0 - j1 + G2;
-      const x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2;
-
-      const ii = i & 255, jj = j & 255;
-      const gi0 = permMod12[ii + perm[jj]];
-      const gi1 = permMod12[ii + i1 + perm[jj + j1]];
-      const gi2 = permMod12[ii + 1 + perm[jj + 1]];
-
-      let t0 = 0.5 - x0 * x0 - y0 * y0;
-      n0 = t0 < 0 ? 0 : (t0 *= t0, t0 * t0 * (grad3[gi0][0] * x0 + grad3[gi0][1] * y0));
-
-      let t1 = 0.5 - x1 * x1 - y1 * y1;
-      n1 = t1 < 0 ? 0 : (t1 *= t1, t1 * t1 * (grad3[gi1][0] * x1 + grad3[gi1][1] * y1));
-
-      let t2 = 0.5 - x2 * x2 - y2 * y2;
-      n2 = t2 < 0 ? 0 : (t2 *= t2, t2 * t2 * (grad3[gi2][0] * x2 + grad3[gi2][1] * y2));
-
-      return 70 * (n0 + n1 + n2);
-    };
-
-    const simplex = new SimplexNoise();
-
-    function noise2D(x, y, frequency) {
-      frequency = frequency || 1;
-      return simplex.noise2D(x * frequency, y * frequency);
-    }
-
-    function mapRange(value, inMin, inMax, outMin, outMax, clamp) {
-      const result = ((value - inMin) / (inMax - inMin)) * (outMax - outMin) + outMin;
-      if (clamp) {
-        return Math.max(Math.min(result, Math.max(outMin, outMax)), Math.min(outMin, outMax));
-      }
-      return result;
-    }
-
-    // ---------------------------------------------------------------
-    // Configuración del canvas — se ajusta al tamaño del propio hero,
-    // no de toda la ventana
-    // ---------------------------------------------------------------
-    const canvas = document.getElementById('heroCanvas');
-    const context = canvas.getContext('2d');
-    const container = canvas.closest('.hero');
-
-    let width, height, dpr;
-
-    function resize() {
-      dpr = window.devicePixelRatio || 1;
-      const rect = container.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    let frame = 0;
-    const speed = 0.15; // más bajo = más lento, 1 = velocidad original
-
-    function draw() {
-      context.clearRect(0, 0, width, height);
-
-      const cols = 25;
-      const rows = 25;
-      const numCells = cols * rows;
-
-      const gridw = width * 1;
-      const gridh = height * 1.5;
-      const cellw = gridw / cols;
-      const cellh = gridh / rows;
-
-      const margx = (width - gridw) * 0.5;
-      const margy = (height - gridh) * 0.5;
-
-      context.strokeStyle = 'rgba(155, 71, 54, 0.35)';
-
-      for (let i = 0; i < numCells; i++) {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-
-        const x = col * cellw;
-        const y = row * cellh;
-        const w = cellw * 0.8;
-
-        const n = noise2D(x + frame * 15, y, 0.001);
-        const angle = n * Math.PI * 0.3;
-        const scale = mapRange(n, -1, 1, 1, 14);
-
-        context.save();
-        context.translate(x, y);
-        context.translate(margx, margy);
-        context.translate(cellw * 0.5, cellh * 0.5);
-        context.rotate(angle);
-
-        context.lineWidth = scale;
-
-        context.beginPath();
-        context.moveTo(w * -0.5, 0);
-        context.lineTo(w * 0.5, 0);
-        context.stroke();
-        context.restore();
-      }
-
-      frame += speed;
-      requestAnimationFrame(draw);
-    }
-
-    requestAnimationFrame(draw);
-  })();
   </script>
 
 </body>
