@@ -15,16 +15,14 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/x-icon" href="favicon.png">
   <style>
-    /* NOTE: styles.css already sets .hero { position: fixed; padding: 76px 23px; ... }
-       We only add what's needed here so we don't fight that rule — previously this
-       block redeclared position:relative and padding:0, which silently cancelled
-       the fixed positioning and collapsed the hero's padding. */
+    /* Hero background canvas: full-bleed layer that ignores the .wrap max-width,
+       so it can reach the actual right edge of the screen instead of stopping
+       at the edge of the centered content column. */
     .hero {
-      top: 0;
-      left: 0;
-      width: 100%;
+      position: relative;
       overflow: hidden;
-      z-index: 0;
+      /* .hero is no longer itself a .wrap — it spans the full viewport width */
+      padding: 0;
     }
 
     .hero-canvas {
@@ -42,22 +40,6 @@
       z-index: 1;
       padding-top: 100px;
       padding-bottom: 100px;
-    }
-
-    /* Reserves scroll space equal to the hero's rendered height (kept in sync
-       by JS below), since the fixed hero no longer occupies space in the flow */
-    .hero-spacer {
-      width: 100%;
-    }
-
-    /* Everything that scrolls needs to be a positioned element with an opaque
-       background so it paints above — and visually covers — the fixed hero.
-       var(--paper) matches the site's own background, so there's no seam. */
-    .page-content,
-    footer {
-      position: relative;
-      z-index: 1;
-      background: var(--paper);
     }
   </style>
 </head>
@@ -94,11 +76,6 @@
         </p>
       </div>
     </section>
-
-    <!-- Reserva el espacio de scroll para el hero, ahora fijo (ver script al final) -->
-    <div class="hero-spacer" id="heroSpacer" aria-hidden="true"></div>
-
-    <div class="page-content">
 
     <!-- ================= VER ================= -->
     <section id="watch" class="wrap">
@@ -374,8 +351,6 @@
         </div>
       </div>
     </section>
-
-    </div><!-- /.page-content -->
   </main>
 
   <footer id="contact">
@@ -521,7 +496,6 @@
     const canvas = document.getElementById('heroCanvas');
     const context = canvas.getContext('2d');
     const container = canvas.closest('.hero');
-    const spacer = document.getElementById('heroSpacer');
 
     let width, height, dpr;
 
@@ -533,18 +507,9 @@
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // keep the spacer in sync with the hero's real height, since the hero's
-      // size comes from its own padding/content, not a fixed viewport unit
-      if (spacer) spacer.style.height = height + 'px';
     }
     window.addEventListener('resize', resize);
     resize();
-
-    // catches height changes resize doesn't (e.g. web font swapping in after load)
-    if ('ResizeObserver' in window) {
-      new ResizeObserver(resize).observe(container);
-    }
 
     let frame = 0;
     const speed = 0.15; // más bajo = más lento, 1 = velocidad original

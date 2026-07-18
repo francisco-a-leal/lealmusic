@@ -15,49 +15,60 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/x-icon" href="favicon.png">
   <style>
-    /* NOTE: styles.css already sets .hero { position: fixed; padding: 76px 23px; ... }
-       We only add what's needed here so we don't fight that rule — previously this
-       block redeclared position:relative and padding:0, which silently cancelled
-       the fixed positioning and collapsed the hero's padding. */
+    /* Hero is pinned to the viewport; the rest of the page scrolls on top of it */
     .hero {
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
+      padding: 0;
       z-index: 0;
+    }
+
+    /* Reserves scroll space equal to the hero's height, since the fixed hero
+       itself no longer takes up room in the document flow */
+    .hero-spacer {
+      height: 100vh;
+    }
+
+    /* Everything that scrolls over the hero needs to be positioned above it
+       and have an opaque background, or the fixed hero will show through */
+    .page-content {
+      position: relative;
+      z-index: 1;
+      background: rgb(245, 229, 209); /* match your actual page/body background here */
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      background: rgb(245, 229, 209); /* match your actual page/body background here */
+    }
+
+    /* Keep the nav visible above the fixed hero */
+    .site-nav {
+      position: relative;
+      z-index: 10;
     }
 
     .hero-canvas {
       position: absolute;
       top: 0;
       right: 0;
-      width: 55%;
+      width: 75%;
       height: 100%;
       z-index: 0;
       pointer-events: none;
+      /* fade the left edge of the canvas so it blends instead of cutting off sharply */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%);
+      mask-image: linear-gradient(to right, transparent 0%, black 18%);
     }
 
     .hero-inner {
       position: relative;
       z-index: 1;
-      padding-top: 100px;
-      padding-bottom: 100px;
-    }
-
-    /* Reserves scroll space equal to the hero's rendered height (kept in sync
-       by JS below), since the fixed hero no longer occupies space in the flow */
-    .hero-spacer {
-      width: 100%;
-    }
-
-    /* Everything that scrolls needs to be a positioned element with an opaque
-       background so it paints above — and visually covers — the fixed hero.
-       var(--paper) matches the site's own background, so there's no seam. */
-    .page-content,
-    footer {
-      position: relative;
-      z-index: 1;
-      background: var(--paper);
     }
   </style>
 </head>
@@ -95,8 +106,8 @@
       </div>
     </section>
 
-    <!-- Reserva el espacio de scroll para el hero, ahora fijo (ver script al final) -->
-    <div class="hero-spacer" id="heroSpacer" aria-hidden="true"></div>
+    <!-- Reserves scroll space for the now-fixed hero above -->
+    <div class="hero-spacer" aria-hidden="true"></div>
 
     <div class="page-content">
 
@@ -521,7 +532,6 @@
     const canvas = document.getElementById('heroCanvas');
     const context = canvas.getContext('2d');
     const container = canvas.closest('.hero');
-    const spacer = document.getElementById('heroSpacer');
 
     let width, height, dpr;
 
@@ -533,18 +543,9 @@
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // keep the spacer in sync with the hero's real height, since the hero's
-      // size comes from its own padding/content, not a fixed viewport unit
-      if (spacer) spacer.style.height = height + 'px';
     }
     window.addEventListener('resize', resize);
     resize();
-
-    // catches height changes resize doesn't (e.g. web font swapping in after load)
-    if ('ResizeObserver' in window) {
-      new ResizeObserver(resize).observe(container);
-    }
 
     let frame = 0;
     const speed = 0.15; // más bajo = más lento, 1 = velocidad original
@@ -552,19 +553,19 @@
     function draw() {
       context.clearRect(0, 0, width, height);
 
-      const cols = 25;
-      const rows = 25;
+      const cols = 6;
+      const rows = 8;
       const numCells = cols * rows;
 
-      const gridw = width * 1;
-      const gridh = height * 1.5;
+      const gridw = width * 0.95;
+      const gridh = height * 0.95;
       const cellw = gridw / cols;
       const cellh = gridh / rows;
 
       const margx = (width - gridw) * 0.5;
       const margy = (height - gridh) * 0.5;
 
-      context.strokeStyle = 'rgba(155, 71, 54, 0.35)';
+      context.strokeStyle = 'rgba(40, 32, 24, 0.35)';
 
       for (let i = 0; i < numCells; i++) {
         const col = i % cols;
