@@ -15,13 +15,18 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/x-icon" href="favicon.png">
   <style>
-    /* NOTE: styles.css already sets .hero { position: fixed; padding: 76px 23px; ... }
-       We only add what's needed here so we don't fight that rule — previously this
-       block redeclared position:relative and padding:0, which silently cancelled
-       the fixed positioning and collapsed the hero's padding. */
+    /* NOTE: styles.css sets .hero { position: fixed; padding: 76px 23px; ... }.
+       The hero's CONTENT (title, role lines, meta) should scroll away with the
+       page like normal content, so we override position back to relative here
+       — the hero now takes up real space in the document flow instead of
+       being pinned to the viewport. The animated canvas is a separate element
+       with its own position: fixed below, so it keeps acting as a persistent
+       backdrop (visible through the .paper-mask cutouts at each section-ruler)
+       even once the hero text itself has scrolled out of view. */
     .hero {
-      top: 0;
-      left: 0;
+      position: relative;
+      top: auto;
+      left: auto;
       width: 100%;
       overflow: hidden;
       z-index: 0;
@@ -32,7 +37,7 @@
       top: 0;
       right: 0;
       width: 2600px;
-      height: 1000px;
+      height: 100%;
       z-index: 0;
       pointer-events: none;
     }
@@ -44,20 +49,28 @@
       padding-bottom: 100px;
     }
 
-    /* Reserves scroll space equal to the hero's rendered height (kept in sync
-       by JS below), since the fixed hero no longer occupies space in the flow */
-    .hero-spacer {
-      width: 100%;
-    }
-
-    /* Everything that scrolls needs to be a positioned element with an opaque
-       background so it paints above — and visually covers — the fixed hero.
-       var(--paper) matches the site's own background, so there's no seam. */
-    .page-content,
-    footer {
+    /* Everything that scrolls needs to be a positioned element so it paints
+       above the fixed hero. The opaque paper fill itself now lives on
+       .paper-mask (a separate layer inside .page-content) instead of being
+       painted directly on .page-content, so that layer alone can be cut into
+       with clip-path — punching "windows" down to the fixed hero canvas at
+       each section-ruler — without also clipping away the header text that
+       sits on top of it. */
+    .page-content {
       position: relative;
       z-index: 1;
+    }
+
+    .paper-mask {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
       background: var(--paper);
+      pointer-events: none;
+    }
+
+    body {
+      overflow-x: hidden;
     }
   </style>
 </head>
@@ -95,16 +108,19 @@
       </div>
     </section>
 
-    <!-- Reserva el espacio de scroll para el hero, ahora fijo (ver script al final) -->
-    <div class="hero-spacer" id="heroSpacer" aria-hidden="true"></div>
-
     <div class="page-content">
+      <!-- Solid paper fill for everything scrolled above the hero. This layer,
+           not .page-content itself, gets the clip-path cutouts so the header
+           text (a sibling, painted above it) is never clipped along with it. -->
+      <div class="paper-mask" id="paperMask" aria-hidden="true"></div>
 
     <!-- ================= VER ================= -->
     <section id="watch" class="wrap">
-      <div class="section-head">
-        <span class="tag">CH.01</span>
-        <h2>Ver</h2>
+      <div class="section-ruler">
+        <div class="section-head">
+          <span class="tag">CH.01</span>
+          <h2>Ver</h2>
+        </div>
       </div>
 
       <div class="receiver video-panel">
@@ -132,9 +148,11 @@
 
     <!-- ================= ESCUCHAR ================= -->
     <section id="listen" class="wrap">
-      <div class="section-head">
-        <span class="tag">CH.02</span>
-        <h2>Escuchar</h2>
+      <div class="section-ruler">
+        <div class="section-head">
+          <span class="tag">CH.02</span>
+          <h2>Escuchar</h2>
+        </div>
       </div>
 
       <div class="receiver">
@@ -169,9 +187,11 @@
 
     <!-- ================= TRABAJO ================= -->
     <section id="work" class="wrap">
-      <div class="section-head">
-        <span class="tag">CH.03</span>
-        <h2>Trabajo Seleccionado</h2>
+      <div class="section-ruler">
+        <div class="section-head">
+          <span class="tag">CH.03</span>
+          <h2>Trabajo Seleccionado</h2>
+        </div>
       </div>
 
       <div class="log-grid">
@@ -237,9 +257,11 @@
 
     <!-- ================= SOBRE MÍ ================= -->
     <section id="about" class="wrap">
-      <div class="section-head">
-        <span class="tag">CH.04</span>
-        <h2>Sobre mí</h2>
+      <div class="section-ruler">
+        <div class="section-head">
+          <span class="tag">CH.04</span>
+          <h2>Sobre mí</h2>
+        </div>
       </div>
 
       <div class="about-grid">
@@ -311,9 +333,11 @@
 
     <!-- ================= RANGO / CANALES ================= -->
     <section id="range" class="wrap">
-      <div class="section-head">
-        <span class="tag">FADER BANK</span>
-        <h2>Rango</h2>
+      <div class="section-ruler">
+        <div class="section-head">
+          <span class="tag">FADER BANK</span>
+          <h2>Rango</h2>
+        </div>
       </div>
       <div class="channels" id="channelBank">
         <div class="channel">
@@ -380,7 +404,7 @@
 
   <footer id="contact">
     <div class="wrap">
-      <div class="footer-inner">
+      <div class="footer-inner" style="z-index: 0;">
         <div>
           <p class="eyebrow">CH.05 — Contacto</p>
           <h3 class="footer-title">Hagamos<br>algo juntos.</h3>
@@ -423,6 +447,54 @@
     } else {
       channels.forEach(function (ch) { ch.classList.add('in-view'); });
     }
+  </script>
+
+  <!-- ================= VENTANAS DE CANAL EN LOS ENCABEZADOS ================= -->
+  <script>
+  (function () {
+    // Cada .section-ruler debe leer como una regla horizontal que deja ver el
+    // fondo animado del hero (fixed, detrás de todo). En vez de perforar
+    // .page-content completo (lo que también recortaría el texto del
+    // encabezado, que vive dentro), el relleno opaco vive en una capa aparte,
+    // .paper-mask, y es SOLO esa capa la que se recorta con clip-path,
+    // usando un solo <path> con regla evenodd: un rectángulo grande de fondo
+    // más un rectángulo "agujero" por cada .section-ruler.
+    var mask = document.getElementById('paperMask');
+    var pageContent = document.querySelector('.page-content');
+    if (!mask || !pageContent) return;
+
+    function updateMask() {
+      var rulers = document.querySelectorAll('.section-ruler');
+      var pcRect = pageContent.getBoundingClientRect();
+      var w = Math.ceil(pcRect.width);
+      var h = Math.ceil(pageContent.scrollHeight);
+
+      var d = 'M0 0 H' + w + ' V' + h + ' H0 Z ';
+
+      rulers.forEach(function (ruler) {
+        var r = ruler.getBoundingClientRect();
+        var top = Math.round(r.top - pcRect.top);
+        var bottom = Math.round(top + r.height);
+        d += 'M0 ' + top + ' H' + w + ' V' + bottom + ' H0 Z ';
+      });
+
+      try {
+        mask.style.clipPath = 'path(evenodd, "' + d + '")';
+      } catch (e) {
+        // navegadores sin soporte para path() simplemente conservan el fondo sólido
+      }
+    }
+
+    window.addEventListener('resize', updateMask);
+    window.addEventListener('load', updateMask);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updateMask);
+    }
+    // Fraunces puede tardar un toque en aplicarse y cambiar la altura del
+    // encabezado; recalculamos un par de veces después de la carga inicial.
+    setTimeout(updateMask, 60);
+    setTimeout(updateMask, 300);
+  })();
   </script>
 
   <!-- ================= FONDO ANIMADO DEL HERO ================= -->
@@ -521,7 +593,6 @@
     const canvas = document.getElementById('heroCanvas');
     const context = canvas.getContext('2d');
     const container = canvas.closest('.hero');
-    const spacer = document.getElementById('heroSpacer');
 
     let width, height, dpr;
 
@@ -533,10 +604,6 @@
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      // keep the spacer in sync with the hero's real height, since the hero's
-      // size comes from its own padding/content, not a fixed viewport unit
-      if (spacer) spacer.style.height = height + 'px';
     }
     window.addEventListener('resize', resize);
     resize();
@@ -552,8 +619,8 @@
     function draw() {
       context.clearRect(0, 0, width, height);
 
-      const cols = 25;
-      const rows = 25;
+      const cols = 50;
+      const rows = 50;
       const numCells = cols * rows;
 
       const gridw = width * 1;

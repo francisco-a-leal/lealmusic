@@ -354,49 +354,24 @@
         padding: 74px 0;
     }
 
-    /* .section-ruler is the full-bleed "window": it breaks out of .wrap's
-       max-width so the ruler reads as a bar running edge-to-edge, and it
-       carries no background of its own — the opaque paper fill sits on the
-       separate .paper-mask layer in index.html, which is cut with clip-path
-       exactly at each ruler's position, letting the fixed hero canvas show
-       through here like a lit VU-meter strip. */
-    .section-ruler {
-        position: relative;
-        width: 100vw;
-        left: 50%;
-        right: 50%;
-        margin-left: -50vw;
-        margin-right: -50vw;
-        margin-bottom: 38px;
-        border-top: 1px solid var(--cream-line);
-        border-bottom: 1px solid var(--cream-line);
-    }
-
     .section-head {
-        max-width: var(--maxw);
-        margin: 0 auto;
-        padding: 30px 28px;
         display: flex;
         align-items: baseline;
-        gap: 20px;
+        gap: 14px;
+        margin-bottom: 38px;
+        border-bottom: 1px solid var(--cream-line);
+        padding-bottom: 16px;
     }
 
     .section-head h2 {
-        font-family: 'Fraunces', serif;
-        /* font-size: clamp(2.6rem, 6vw, 4.4rem); */
-        font-size: clamp(2.6rem, 6vw, 4.4rem);
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        line-height: 1;
-        mix-blend-mode: difference;
+        font-size: 1.9rem;
     }
 
     .section-head .tag {
         font-family: 'Space Mono', monospace;
-        font-size: 0.8rem;
+        font-size: 0.72rem;
         color: var(--teal);
-        letter-spacing: 0.12em;
-        mix-blend-mode: difference;
+        letter-spacing: 0.1em;
     }
 
     /* ---------- ABOUT ---------- */
