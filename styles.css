@@ -3,7 +3,7 @@
         --paper-panel: #ffffffde;
         --ink: rgba(245, 229, 209, 1);
         --walnut: #dfcec3;
-        --walnut-dk: #35251a;
+        --walnut-dk: rgb(155,155,155);
         --rust: rgb(155, 71, 54);
         --teal: #c5c5c5;
         --mustard: #748067;
@@ -178,7 +178,7 @@
     }
 
     .hero-title {
-        font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+        font-size: clamp(8rem, 6.4vw, 4.6rem);
         font-weight: 900;
         line-height: 0.98;
         letter-spacing: -0.01em;
@@ -334,7 +334,7 @@
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 30%, #6b503b, #2c1f16 70%);
+        background: radial-gradient(circle at 35% 30%, #6d6d6d, #4a4a4a 70%);
         box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         position: relative;
     }
@@ -372,7 +372,7 @@
         margin-bottom: 38px;
         border-top: 1px solid var(--cream-line);
         border-bottom: 1px solid var(--cream-line);
-        background-color: rgba(245, 229, 209, 0.25);
+        background-color: rgba(156, 156, 156, 0.25);
         z-index: 50;
     }
 
@@ -480,7 +480,7 @@
 
     .about-copy p {
         font-size: 1.06rem;
-        color: var(--walnut);
+        color: var(--paper-panel);
         margin: 0 0 18px;
     }
 
@@ -602,7 +602,7 @@
 
     /* ---------- LISTEN ---------- */
     .receiver {
-        background: linear-gradient(180deg, #4a3527, var(--walnut-dk));
+        background: linear-gradient(180deg, #3c3c3c, var(--walnut-dk));
         border-radius: 14px;
         padding: 30px;
         box-shadow: var(--shadow);
